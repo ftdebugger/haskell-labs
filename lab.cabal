@@ -20,6 +20,8 @@ executable lab
       base    == 4.*
     , containers
     , csv
+    , vector
+    , random
 
 library
   ghc-options:
@@ -29,10 +31,13 @@ library
   exposed-modules:
       My.CSV
       My.Arguments
+      My.FCM
   build-depends:
       base    == 4.*
     , containers
     , csv
+    , vector
+    , random
 
 test-suite spec
   type:
@@ -47,3 +52,5 @@ test-suite spec
       base    == 4.*
     , lab
     , hspec   == 2.*
+    , vector
+    , random
