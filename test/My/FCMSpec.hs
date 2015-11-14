@@ -62,4 +62,6 @@ spec = do
       let centers = [[1, 2, 3], [1, 3, 4]]
 
       let clusters = cluserize euclidDistance centers objects
-      print clusters
+      let expect = [([1.0,2.0,3.0],[[1.0,2.0,3.0],[1.0,1.0,5.0]]),([1.0,3.0,4.0],[[1.0,3.0,4.0],[1.0,5.0,6.0]])]
+
+      clusters `shouldBe` expect
