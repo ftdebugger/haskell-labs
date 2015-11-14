@@ -36,8 +36,6 @@ spec = do
       let v2 = [1, 5, 7]
       let dist = accessoryDistance euclidDistance v1 v2 0.1
 
-      getRandomCenters 2 [[1], [2], [3]] >>= print
-
       abs ( dist - 0.05 ) < 0.0001 `shouldBe` True
 
     it "calculate accessory distance with hamming" $ do
@@ -56,7 +54,7 @@ spec = do
 
       dist `shouldBe` 1.3
 
-  describe "Clusterize" $
+  describe "Clusterize" $ do
     it "should create correct clusters" $ do
       let objects = [[1, 2, 3], [1, 3, 4],[1, 1, 5],[1, 5, 6]]
       let centers = [[1, 2, 3], [1, 3, 4]]
@@ -65,3 +63,14 @@ spec = do
       let expect = [([1.0,2.0,3.0],[[1.0,2.0,3.0],[1.0,1.0,5.0]]),([1.0,3.0,4.0],[[1.0,3.0,4.0],[1.0,5.0,6.0]])]
 
       clusters `shouldBe` expect
+
+    it "should select cluster centers" $ do
+      let objects = [[1, 2, 3], [1, 2, 3], [1, 3, 4],[1, 1, 5],[1, 5, 6]]
+      let centers = [[1, 1, 5], [1, 5, 6]]
+
+      let clusters = cluserize euclidDistance centers objects
+      let newCenters = selectCenters euclidDistance clusters
+
+      let expect = [[1, 2, 3], [1, 5, 6]]
+
+      newCenters `shouldBe` expect
