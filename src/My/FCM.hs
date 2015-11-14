@@ -75,8 +75,8 @@ getRandomCenters :: Int -> Objects -> IO Objects
 getRandomCenters c objects = replicateM c (pick c)
   where pick _ = randomPick objects
 
-cluserize :: Distance -> Centers -> Objects -> Clusters
-cluserize distance centers objects = createClusters getCenters
+clusterize :: Distance -> Centers -> Objects -> Clusters
+clusterize distance centers objects = createClusters getCenters
   where createClusters objs = map (createCluster objs) centers
         createCluster objs center = (center, pickWithCenter center objs)
         pickWithCenter center objs = map first $ filter (filterWithCenter center) objs
@@ -98,6 +98,20 @@ selectCenters distance = map selectCenter
         minCenter objects = minimumBy compareMins $ map objectDistance objects
           where objectDistance object = (object, sum $ map (distance object) objects)
                 compareMins (_, a) (_, b) = compare a b
+
+fcm :: Distance ->
+       Int -> -- cluster count
+       Objects ->
+       IO Clusters
+
+fcm distance c objects = do
+  centers <- getRandomCenters c objects
+  return $ fcm' centers
+  where fcm' centers = checkCluster (clusterize distance centers objects)
+          where checkCluster cluster = compareCenters cluster (selectCenters distance cluster)
+                compareCenters cluster newCenters
+                  | centers == newCenters = cluster
+                  | otherwise = fcm' newCenters
 
 -- calculateCenters :: Int -> -- number of clusters
 --                     Matrix -> -- input matrix

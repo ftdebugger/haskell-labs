@@ -59,18 +59,24 @@ spec = do
       let objects = [[1, 2, 3], [1, 3, 4],[1, 1, 5],[1, 5, 6]]
       let centers = [[1, 2, 3], [1, 3, 4]]
 
-      let clusters = cluserize euclidDistance centers objects
+      let clusters = clusterize euclidDistance centers objects
       let expect = [([1.0,2.0,3.0],[[1.0,2.0,3.0],[1.0,1.0,5.0]]),([1.0,3.0,4.0],[[1.0,3.0,4.0],[1.0,5.0,6.0]])]
 
       clusters `shouldBe` expect
 
     it "should select cluster centers" $ do
-      let objects = [[1, 2, 3], [1, 2, 3], [1, 3, 4],[1, 1, 5],[1, 5, 6]]
+      let objects = [[1, 2, 3], [1, 2, 3], [1, 3, 4], [1, 1, 5], [1, 5, 6]]
       let centers = [[1, 1, 5], [1, 5, 6]]
 
-      let clusters = cluserize euclidDistance centers objects
+      let clusters = clusterize euclidDistance centers objects
       let newCenters = selectCenters euclidDistance clusters
 
       let expect = [[1, 2, 3], [1, 5, 6]]
 
       newCenters `shouldBe` expect
+
+    it "should return result clusters" $ do
+      let objects = [[1, 2, 3], [1, 2, 3], [1, 3, 4], [1, 1, 5], [1, 5, 6]]
+
+      clusters <- fcm euclidDistance 2 objects
+      length clusters `shouldBe` 2
