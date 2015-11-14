@@ -6,18 +6,19 @@ import My.Arguments
 
 -- parse CSV and normalize
 
-parseFile :: [Flag] -> FilePath -> IO ()
+parseFile :: [Flag] -> FilePath -> IO CSV
 parseFile flags file = do
     csvData <- parseCSVFromFile file
     case csvData of
-        Left err -> print err
+        Left err -> do
+            print err
+
+            return []
         Right contents -> do
             let fd = filterEmptyLines contents
             let dt = filterLast flags (filterFirst flags (filterHeader flags fd))
-            let cd = map (map conv) dt where conv v = read v :: Float
 
-            print cd
-            return ()
+            return dt
 
 filterHeader :: [Flag] -> CSV -> CSV
 filterHeader flags csvData
@@ -35,4 +36,4 @@ filterLast flags csvData
     | otherwise = csvData
 
 filterEmptyLines :: CSV -> CSV
-filterEmptyLines csvData = filter(\x -> x/=[""]) csvData
+filterEmptyLines = filter (\x -> x/=[""])
