@@ -7,16 +7,16 @@ import Data.List
 
 -- Main
 
-main :: IO [()]
+main :: IO () --[()]
 main = do
-    (flags, files) <- getArgs >>= parseArguments
-    print files
-    print flags
-    csv <- mapM (parseFile flags) files
+    options <- getArgs >>= parseArguments
 
-    mapM (processCSV flags) csv
+    let Options {input = file} = options
+    csv <- parseFile options file
 
-    where processCSV flags csv = do
+    processCSV options csv
+
+    where processCSV Options {distance = dist, clustersCount = count, randomCenters = random, eps = _eps} csv = do
             accessories <- process (csvToObjects csv)
 
             printAccessories $ transpose accessories
@@ -26,14 +26,6 @@ main = do
             where
               csvToObjects = map (map conv)
                 where conv v = read v :: Double
-              process objects = fcmProcess selectDistance 5 0.01 objects
-                where selectDistance
-                        | Euclid `elem` flags = euclidDistance
-                        | Hemming `elem` flags = hammingDistance
-                        | otherwise = euclidDistance
-                      -- selectClusterCount
-                      --   | ClustersCount `elem` flags = flags ClustersCount
-                      --   | otherwise = 2
+              process = fcmProcess dist count _eps random
               printAccessories = mapM printAccessory
-                where printAccessory accessory = do
-                        print accessory
+                where printAccessory = print

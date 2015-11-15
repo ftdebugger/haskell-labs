@@ -49,6 +49,15 @@ generateAccessory n c = do
         createMatrix nums = transpose $ map normalize $ chunksOf n nums
         normalize row = map (/ sum row) row
 
+getRandomCenters :: Int -> Objects -> IO Objects
+getRandomCenters c objects = do
+  g <- getStdGen
+
+  return $ pick (randomSeq g)
+
+  where randomSeq g = take c (randomRs (0, length objects - 1) g :: [Int])
+        pick = map (\n -> objects !! n)
+
 zeroVector :: Int -> [Double]
 zeroVector n = replicate n 0
 
@@ -79,10 +88,15 @@ fcmMatrixNorm a b = maximum $ zipWith reduceLines a b
 fcmProcess :: Distance ->
               Int -> -- c
               Double ->
+              Bool ->
               Objects ->
               IO Accessories
-fcmProcess distance c eps objects = do
-  accessories <- generateAccessory c (length objects)
+fcmProcess distance c eps randomCenters objects = do
+  accessories <- if randomCenters
+                  then do
+                    centers <- getRandomCenters c objects
+                    return $ fcmCalculateAccessories distance centers objects
+                  else generateAccessory c (length objects)
 
   return $ fcm' accessories
 
@@ -101,13 +115,6 @@ randInRange a b = getStdRandom $ randomR (a, b)
 
 randomPick :: [a] -> IO a
 randomPick xs = liftM (xs !!) (randomRIO (0, length xs - 1))
-
--- getRandomCenters :: Int -> -- Clucsters
---                     Objects ->
---                     IO Centers
-getRandomCenters :: Int -> Objects -> IO Objects
-getRandomCenters c objects = replicateM c (pick c)
-  where pick _ = randomPick objects
 
 clusterize :: Distance -> Centers -> Objects -> Clusters
 clusterize distance centers objects = createClusters getCenters

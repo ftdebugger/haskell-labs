@@ -6,8 +6,8 @@ import My.Arguments
 
 -- parse CSV and normalize
 
-parseFile :: [Flag] -> FilePath -> IO CSV
-parseFile flags file = do
+parseFile :: Options -> FilePath -> IO CSV
+parseFile options file = do
     csvData <- parseCSVFromFile file
     case csvData of
         Left err -> do
@@ -16,23 +16,23 @@ parseFile flags file = do
             return []
         Right contents -> do
             let fd = filterEmptyLines contents
-            let dt = filterLast flags (filterFirst flags (filterHeader flags fd))
+            let dt = filterLast options (filterFirst options (filterHeader options fd))
 
             return dt
 
-filterHeader :: [Flag] -> CSV -> CSV
-filterHeader flags csvData
-    | Header `elem` flags = tail csvData
+filterHeader :: Options -> CSV -> CSV
+filterHeader Options {stripHeader = s} csvData
+    | s = tail csvData
     | otherwise = csvData
 
-filterFirst :: [Flag] -> CSV -> CSV
-filterFirst flags csvData
-    | First `elem` flags = map tail csvData
+filterFirst :: Options -> CSV -> CSV
+filterFirst Options {stripFirst = s} csvData
+    | s = map tail csvData
     | otherwise = csvData
 
-filterLast :: [Flag] -> CSV -> CSV
-filterLast flags csvData
-    | Last `elem` flags = map init csvData
+filterLast :: Options -> CSV -> CSV
+filterLast Options {stripLast = s} csvData
+    | s = map init csvData
     | otherwise = csvData
 
 filterEmptyLines :: CSV -> CSV

@@ -67,7 +67,7 @@ spec = do
     it "fcm process" $ do
       let objects = [[16, 2, 3], [2, 3, 4], [1, 1, 5], [2, 5, 6]]
 
-      result <- fcmProcess euclidDistance 2 0.01 objects
+      result <- fcmProcess euclidDistance 2 0.01 False objects
 
       let sums = zipWith (+) (head result) (result !! 1)
 

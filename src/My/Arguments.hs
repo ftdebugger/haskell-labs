@@ -1,44 +1,52 @@
-module My.Arguments where
+module My.Arguments(parseArguments, Options(..), startOptions) where
 
-import System.Exit
+-- import System.Exit
 
-import Data.List
+-- import Data.List
 import System.Console.GetOpt
-import System.IO
+-- import System.IO
 
-data Flag
-    = Header
-    | First
-    | Last
-    | Help
-    | Euclid
-    | Hemming
-    | ClustersCount String
-    deriving (Eq, Ord, Show)
+import My.FCM
 
-defaultFlags :: [OptDescr Flag]
-defaultFlags =
-    [
-        Option "h" ["header"] (NoArg Header) "Ignore header",
-        Option "f" ["first"] (NoArg First) "Ignore first column",
-        Option "l" ["last"] (NoArg Last) "Ignore last column",
-        Option "e" ["euclid"] (NoArg Euclid) "Euclid distance",
-        Option "m" ["hemming"] (NoArg Hemming) "Euclid distance",
-        Option "c" ["cluster"] (ReqArg ClustersCount "number") "Cluster count",
-        Option "x" ["help"] (NoArg Help) "Help"
-    ]
+data Options = Options { stripHeader :: Bool
+                       , stripFirst :: Bool
+                       , stripLast :: Bool
+                       , distance :: Distance
+                       , clustersCount :: Int
+                       , randomCenters :: Bool
+                       , help :: Bool
+                       , input :: String
+                       , eps :: Double
+                       }
 
-parseArguments :: [String] -> IO ([Flag], [String])
-parseArguments argv = case getOpt Permute defaultFlags argv of
-    (args, fs, []) -> do
-        let files = if null fs then [] else fs
-        if Help `elem` args
-            then do hPutStrLn stderr (usageInfo header defaultFlags)
-                    exitSuccess
-            else return (nub args, files)
+startOptions :: Options
+startOptions = Options { stripHeader = False
+                       , stripFirst = False
+                       , stripLast = False
+                       , distance = euclidDistance
+                       , clustersCount = 2
+                       , randomCenters = False
+                       , help = False
+                       , input = ""
+                       , eps = 0.01
+                       }
 
-    (_, _, errs) -> do
-        hPutStrLn stderr (concat errs ++ usageInfo header defaultFlags)
-        exitWith (ExitFailure 1)
+options :: [ OptDescr (Options -> IO Options) ]
+options =
+   [
+       Option "h" ["header"] (NoArg (\opt -> return opt {stripHeader = True})) "Ignore header",
+       Option "f" ["first"] (NoArg (\opt -> return opt {stripFirst = True})) "Ignore first column",
+       Option "l" ["last"] (NoArg (\opt -> return opt {stripLast = True})) "Ignore last column",
+       Option "e" ["euclid"] (NoArg (\opt -> return opt {distance = euclidDistance})) "Euclid distance",
+       Option "m" ["hamming"] (NoArg (\opt -> return opt {distance = hammingDistance})) "Hamming distance",
+       Option "c" ["cluster"] (ReqArg (\arg opt -> return opt {clustersCount = read arg :: Int}) "NUMBER") "Cluster count",
+       Option "r" ["random"] (NoArg (\opt -> return opt {randomCenters = True})) "Random centers",
+       Option "p" ["eps"] (ReqArg (\arg opt -> return opt {eps = read arg :: Double}) "DOUBLE") "EPS",
+       Option "x" ["help"] (NoArg (\opt -> return opt {help = True})) "Help",
+       Option "i" ["input"] (ReqArg (\arg opt -> return opt {input = arg}) "STRING") "Input file"
+   ]
 
-    where header = "Usage: lab [-hfl] [file ...]"
+parseArguments :: [String] -> IO Options
+parseArguments args = do
+  let (actions, _, _) = getOpt RequireOrder options args
+  foldl (>>=) (return startOptions) actions
