@@ -3,6 +3,7 @@ import System.Environment
 import My.Arguments
 import My.CSV
 import My.FCM
+import Data.List
 
 -- Main
 
@@ -16,16 +17,16 @@ main = do
     mapM (processCSV flags) csv
 
     where processCSV flags csv = do
-            clusters <- process (csvToObjects csv)
+            accessories <- process (csvToObjects csv)
 
-            printClusters clusters
+            printAccessories $ transpose accessories
 
             return ()
 
             where
               csvToObjects = map (map conv)
                 where conv v = read v :: Double
-              process objects = fcm selectDistance 2 objects
+              process objects = fcmProcess selectDistance 5 0.01 objects
                 where selectDistance
                         | Euclid `elem` flags = euclidDistance
                         | Hemming `elem` flags = hammingDistance
@@ -33,7 +34,6 @@ main = do
                       -- selectClusterCount
                       --   | ClustersCount `elem` flags = flags ClustersCount
                       --   | otherwise = 2
-              printClusters = mapM printCluster
-                where printCluster (center, objects) = do
-                        print $ "Cluster " ++ show center
-                        print objects
+              printAccessories = mapM printAccessory
+                where printAccessory accessory = do
+                        print accessory

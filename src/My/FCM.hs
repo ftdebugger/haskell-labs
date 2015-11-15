@@ -3,6 +3,7 @@ module My.FCM where
 import System.Random
 import Control.Monad
 import Data.List
+import Data.List.Split
 
 type Points = [Double]
 type Matrix = [Points]
@@ -41,9 +42,12 @@ generateAccessory :: Int -> -- N
                      Int -> -- C
                      IO Matrix
 generateAccessory n c = do
-  matrix <- replicateM c (generateLine n)
+  g <- getStdGen
 
-  return $ transpose matrix
+  return $ createMatrix (getNumbers g)
+  where getNumbers g = take (n * c) (randomRs (0, 1) g :: [Double])
+        createMatrix nums = transpose $ map normalize $ chunksOf n nums
+        normalize row = map (/ sum row) row
 
 zeroVector :: Int -> [Double]
 zeroVector n = replicate n 0

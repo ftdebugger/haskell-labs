@@ -22,6 +22,7 @@ executable lab
     , csv
     , vector
     , random
+    , split
 
 library
   ghc-options:
@@ -38,6 +39,7 @@ library
     , csv
     , vector
     , random
+    , split
 
 test-suite spec
   type:
@@ -54,3 +56,4 @@ test-suite spec
     , hspec   == 2.*
     , vector
     , random
+    , split

@@ -4,6 +4,14 @@ import My.FCM
 
 import Test.Hspec
 
+nearTo :: Double -> Double -> Double
+nearTo a b
+  | abs a - b < 0.001 = a
+  | otherwise = a
+
+nearTo1 :: Double -> Double
+nearTo1 = nearTo 1
+
 spec :: Spec
 spec = do
   describe "FCM Distance" $ do
@@ -22,10 +30,11 @@ spec = do
   describe "FCM matrix" $ do
     it "generate random line" $ do
       line <- generateLine 3
-      sum line `shouldBe` 1
+      nearTo1 (sum line) `shouldBe` 1
+
     it "generate random matrix" $ do
       matrix <- generateAccessory 3 2
-      sum (map sum matrix) `shouldBe` 2
+      nearTo 2 (sum (map sum matrix)) `shouldBe` 2
 
   describe "Utils" $ do
     it "generate zero vector" $
@@ -46,7 +55,7 @@ spec = do
       let result = fcmCalculateAccessories euclidDistance centers objects
       let sums = zipWith (+) (head result) (result !! 1)
 
-      sums `shouldBe` [1, 1, 1, 1]
+      map nearTo1 sums `shouldBe` [1, 1, 1, 1]
 
     it "fcmMatrixNorm" $ do
       let a1 = [[1, 1, 0, 0], [0, 0, 1, 1]]
@@ -62,29 +71,7 @@ spec = do
 
       let sums = zipWith (+) (head result) (result !! 1)
 
-      sums `shouldBe` [1, 1, 1, 1]
-    -- it "calculate  accessory distance with euclid" $ do
-    --   let v1 = [1, 2, 3]
-    --   let v2 = [1, 5, 7]
-    --   let dist = accessoryDistance euclidDistance v1 v2 0.1
-    --
-    --   abs ( dist - 0.05 ) < 0.0001 `shouldBe` True
-    --
-    -- it "calculate accessory distance with hamming" $ do
-    --   let v1 = [1, 2, 3]
-    --   let v2 = [1, 5, 7]
-    --   let dist = accessoryDistance hammingDistance v1 v2 0.1
-    --
-    --   abs ( dist - 0.07 ) < 0.0001 `shouldBe` True
-    --
-    -- it "calculate accessories distance with euclid" $ do
-    --   let v1 = [1, 2, 3]
-    --   let v2 = [[1, 5, 7], [1, 5, 7]]
-    --   let acc = [0.1, 0.5]
-    --
-    --   let dist = accessoriesDistance euclidDistance v1 v2 acc
-    --
-    --   dist `shouldBe` 1.3
+      map nearTo1 sums `shouldBe` [1, 1, 1, 1]
 
   describe "Clusterize" $ do
     it "should create correct clusters" $ do
