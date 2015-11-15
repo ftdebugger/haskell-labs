@@ -24,5 +24,17 @@ $ cabal test
 Iris
 
 ```
-$ ./dist/build/lab/lab ./dist/build/lab/lab -l -c 4 -i tasks/irises.txt
+$ ./dist/build/lab/lab ./dist/build/lab/lab -l -c 3 -i tasks/irises.txt
+```
+
+Butterfly
+
+```
+$ ./dist/build/lab/lab -c 2 -i tasks/butterfly.txt
+```
+
+Glass
+
+```
+$ ./dist/build/lab/lab -c 2 -i tasks/glass.txt
 ```

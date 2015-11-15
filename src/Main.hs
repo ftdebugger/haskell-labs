@@ -12,6 +12,7 @@ main = do
     options <- getArgs >>= parseArguments
 
     let Options {input = file} = options
+
     csv <- parseFile options file
 
     processCSV options csv
