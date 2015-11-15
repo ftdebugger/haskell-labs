@@ -31,28 +31,60 @@ spec = do
     it "generate zero vector" $
       zeroVector 5 `shouldBe` [0, 0, 0, 0, 0]
 
-    it "calculate accessory distance with euclid" $ do
-      let v1 = [1, 2, 3]
-      let v2 = [1, 5, 7]
-      let dist = accessoryDistance euclidDistance v1 v2 0.1
+    it "fcmSelectCenters" $ do
+      let objects = [[1, 2, 3], [1, 3, 4], [1, 1, 5], [1, 5, 6]]
+      let accessories = [[1, 1, 0, 0], [0, 0, 1, 1]]
 
-      abs ( dist - 0.05 ) < 0.0001 `shouldBe` True
+      let result = fcmSelectCenters accessories objects
+      let expect = [[1.0,2.5,3.5],[1.0,3.0,5.5]]
 
-    it "calculate accessory distance with hamming" $ do
-      let v1 = [1, 2, 3]
-      let v2 = [1, 5, 7]
-      let dist = accessoryDistance hammingDistance v1 v2 0.1
+      result `shouldBe` expect
+    it "calcAccessoryForObj" $ do
+      let objects = [[1, 2, 3], [1, 3, 4], [1, 1, 5], [1, 5, 6]]
+      let centers = [[1.0, 2.5, 3.5], [1.0, 3.0, 5.5]]
 
-      abs ( dist - 0.07 ) < 0.0001 `shouldBe` True
+      let result = fcmCalculateAccessories euclidDistance centers objects
+      let sums = zipWith (+) (head result) (result !! 1)
 
-    it "calculate accessories distance with euclid" $ do
-      let v1 = [1, 2, 3]
-      let v2 = [[1, 5, 7], [1, 5, 7]]
-      let acc = [0.1, 0.5]
+      sums `shouldBe` [1, 1, 1, 1]
 
-      let dist = accessoriesDistance euclidDistance v1 v2 acc
+    it "fcmMatrixNorm" $ do
+      let a1 = [[1, 1, 0, 0], [0, 0, 1, 1]]
+      let a2 = [[1, 1, 0.5, 0], [0, 0, 0.5, 1]]
 
-      dist `shouldBe` 1.3
+      let result = fcmMatrixNorm a1 a2
+      result `shouldBe` 0.5
+
+    it "fcm process" $ do
+      let objects = [[16, 2, 3], [2, 3, 4], [1, 1, 5], [2, 5, 6]]
+
+      result <- fcmProcess euclidDistance 2 0.01 objects
+
+      let sums = zipWith (+) (head result) (result !! 1)
+
+      sums `shouldBe` [1, 1, 1, 1]
+    -- it "calculate  accessory distance with euclid" $ do
+    --   let v1 = [1, 2, 3]
+    --   let v2 = [1, 5, 7]
+    --   let dist = accessoryDistance euclidDistance v1 v2 0.1
+    --
+    --   abs ( dist - 0.05 ) < 0.0001 `shouldBe` True
+    --
+    -- it "calculate accessory distance with hamming" $ do
+    --   let v1 = [1, 2, 3]
+    --   let v2 = [1, 5, 7]
+    --   let dist = accessoryDistance hammingDistance v1 v2 0.1
+    --
+    --   abs ( dist - 0.07 ) < 0.0001 `shouldBe` True
+    --
+    -- it "calculate accessories distance with euclid" $ do
+    --   let v1 = [1, 2, 3]
+    --   let v2 = [[1, 5, 7], [1, 5, 7]]
+    --   let acc = [0.1, 0.5]
+    --
+    --   let dist = accessoriesDistance euclidDistance v1 v2 acc
+    --
+    --   dist `shouldBe` 1.3
 
   describe "Clusterize" $ do
     it "should create correct clusters" $ do

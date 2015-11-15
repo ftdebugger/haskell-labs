@@ -10,7 +10,7 @@ type Matrix = [Points]
 type Object = [Double]
 type Objects = [Object]
 
-type Accesorry = Double
+type Accesorry = [Double]
 type Accessories = [Accesorry]
 
 type Center = Object
@@ -40,27 +40,57 @@ generateLine n = do
 generateAccessory :: Int -> -- N
                      Int -> -- C
                      IO Matrix
-generateAccessory n c = replicateM c (generateLine n)
+generateAccessory n c = do
+  matrix <- replicateM c (generateLine n)
+
+  return $ transpose matrix
 
 zeroVector :: Int -> [Double]
 zeroVector n = replicate n 0
 
-accessoryDistance :: Distance ->
-                  Center ->
-                  Object -> -- accessory
-                  Accesorry ->
-                  Double
-accessoryDistance distance center obj accessory = accessory * accessory * dist
-  where dist = distance center obj
+fcmSelectCenters :: Accessories ->
+                    Objects ->
+                    Centers
+fcmSelectCenters accessories objects = map fcmSelectCenter accessories
+  where fcmSelectCenter accessory = map (/ accSum) elemSum
+          where elemSum = foldl (zipWith (+)) zero (zipWith mult accessory objects)
+                 where mult m = map (\o -> m ** 2 * o)
+                accSum = sum $ map (**2) accessory
+                zero = replicate (length (head objects)) 0
 
-accessoriesDistance :: Distance ->
-                      Center ->
-                      Objects ->
-                      Accessories ->
-                      Double
-accessoriesDistance distance center objects accessories = sum $ map dist zipDist
-  where zipDist = zip objects accessories
-        dist (obj, accessory) = accessoryDistance distance center obj accessory
+fcmCalculateAccessories :: Distance ->
+                           Centers ->
+                           Objects ->
+                           Accessories
+fcmCalculateAccessories distance centers objects = map calcAccessory centers
+  where calcAccessory center = map (calcAccessoryForObj center) objects
+        calcAccessoryForObj center object = 1 / sum'
+          where sum' = sum $ map rel centers
+                rel nCenter = (distance object center / distance object nCenter) ** 2
+
+fcmMatrixNorm :: Accessories -> Accessories -> Double
+fcmMatrixNorm a b = maximum $ zipWith reduceLines a b
+  where reduceLines c d = maximum $ map abs (zipWith (-) c d)
+
+fcmProcess :: Distance ->
+              Int -> -- c
+              Double ->
+              Objects ->
+              IO Accessories
+fcmProcess distance c eps objects = do
+  accessories <- generateAccessory c (length objects)
+
+  return $ fcm' accessories
+
+  where fcm' accessories = calcNewAccessory (fcmSelectCenters accessories objects)
+          where
+            calcNewAccessory centers = checkAccessories (fcmCalculateAccessories distance centers objects)
+            checkAccessories newAccessories
+              | fcmMatrixNorm accessories newAccessories < eps = newAccessories
+              | otherwise = fcm' newAccessories
+
+-- From Wikipedia
+
 
 randInRange :: Int -> Int -> IO Int
 randInRange a b = getStdRandom $ randomR (a, b)
@@ -112,11 +142,6 @@ fcm distance c objects = do
                 compareCenters cluster newCenters
                   | centers == newCenters = cluster
                   | otherwise = fcm' newCenters
-
--- calculateCenters :: Int -> -- number of clusters
---                     Matrix -> -- input matrix
---                     Matrix -> -- accessory matrix
---                     Points -- cetners
 
 -- fcm :: Distance -> -- Distnace function (euclid or hamming)
 --        Int -> -- number of clusters

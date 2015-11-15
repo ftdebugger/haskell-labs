@@ -13,9 +13,9 @@ main = do
     print flags
     csv <- mapM (parseFile flags) files
 
-    mapM processCSV csv
+    mapM (processCSV flags) csv
 
-    where processCSV csv = do
+    where processCSV flags csv = do
             clusters <- process (csvToObjects csv)
 
             printClusters clusters
@@ -25,7 +25,14 @@ main = do
             where
               csvToObjects = map (map conv)
                 where conv v = read v :: Double
-              process objects = fcm euclidDistance 2 objects
+              process objects = fcm selectDistance 2 objects
+                where selectDistance
+                        | Euclid `elem` flags = euclidDistance
+                        | Hemming `elem` flags = hammingDistance
+                        | otherwise = euclidDistance
+                      -- selectClusterCount
+                      --   | ClustersCount `elem` flags = flags ClustersCount
+                      --   | otherwise = 2
               printClusters = mapM printCluster
                 where printCluster (center, objects) = do
                         print $ "Cluster " ++ show center
