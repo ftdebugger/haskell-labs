@@ -38,3 +38,17 @@ Glass
 ```
 $ ./dist/build/lab/lab -c 2 -i tasks/glass.txt
 ```
+
+## Options
+
+```
+  -h --header         Ignore header,
+  -f --first          Ignore first column,
+  -l --last           Ignore last column,
+  -e --euclid         Euclid distance,
+  -m --hammin         Hamming distance,
+  -c --cluster INT    Cluster count,
+  -r --random         Random centers,
+  -p --eps DOUBLE     EPS,
+  -i --input STRING   Input file
+```
