@@ -24,19 +24,19 @@ $ cabal test
 Iris
 
 ```
-$ ./dist/build/lab/lab ./dist/build/lab/lab -l -c 3 -i tasks/irises.txt
+$ ./dist/build/lab/lab ./dist/build/lab/lab -i tasks/irises.txt
 ```
 
 Butterfly
 
 ```
-$ ./dist/build/lab/lab -c 2 -i tasks/butterfly.txt
+$ ./dist/build/lab/lab -i tasks/butterfly.txt
 ```
 
 Glass
 
 ```
-$ ./dist/build/lab/lab -c 2 -i tasks/glass.txt
+$ ./dist/build/lab/lab -i tasks/glass.txt
 ```
 
 ## Options
@@ -45,10 +45,8 @@ $ ./dist/build/lab/lab -c 2 -i tasks/glass.txt
   -h --header         Ignore header,
   -f --first          Ignore first column,
   -l --last           Ignore last column,
-  -e --euclid         Euclid distance,
-  -m --hammin         Hamming distance,
-  -c --cluster INT    Cluster count,
-  -r --random         Random centers,
-  -p --eps DOUBLE     EPS,
   -i --input STRING   Input file
+  -o --output STRING  Output file
+  -t --steps NUMBER   Number of iterations
+  -s --trainSize Number Training set size. [0..1]
 ```

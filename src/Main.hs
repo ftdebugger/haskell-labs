@@ -21,24 +21,27 @@ main = do
     let splitedStream = lineStream >-> collect []
     lastStream <- P.last splitedStream
 
-    process lastStream
+    process options lastStream
 
     return ()
-    -- runEffect $ for lastStream (lift . print)
 
     where collect xs = do
             line <- await
             yield xs
             collect $ xs ++ [line]
 
-          process m = case m of
+          process options m = case m of
             Just v -> do
-              bayesInput <- bayesProcess v 0.8 50
+              let Options {output = out, steps = st, trainSize = ts} = options
 
-              runEffect $ each (outputResult bayesInput) >-> pipePrint
+              bayesInput <- bayesProcess v ts st
+              let strs = outputResult bayesInput
 
-          outputResult output = map outputLine output
-          outputLine (c, p, mat, sigma) = (show c) ++ " - " ++ (outputSigma (zip mat sigma))
+              withFile out WriteMode $ \h -> do
+                runEffect $ each strs >-> (P.toHandle h)
+
+          outputResult = map outputLine
+          outputLine (c, _, mat, sigma) = (show c) ++ " - " ++ (outputSigma (zip mat sigma))
           outputSigma params = intercalate " " $ map out (zip params [1..])
             where out ((m, s), index) = (show index) ++ "(" ++ (show m) ++ "; " ++ (show s) ++ ")"
 

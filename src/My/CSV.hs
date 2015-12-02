@@ -30,19 +30,28 @@ parseFile options file = do
 parseFileWithPipes :: Options -> FilePath -> Producer [Double] IO ()
 parseFileWithPipes options file = do
   h <- lift $ openFile file ReadMode
-  -- P.toListM $
-  -- P.fromHandle h >-> parseLine
-  -- let p = P.fromHandle h >-> parseLine
-  -- return $ P.toListM (P.fromHandle h >-> parseLine)
-  P.fromHandle h >-> parseLine
-  -- return $ (lift (P.toList p) >>= yield)
-  -- return $ P.fromHandle h >-> parseLine >-> collect []
+  let pipe = P.fromHandle h >-> parseLine
+
+  let Options {stripHeader = sHeader} = options
+
+  if sHeader
+    then pipe >-> P.drop 1
+    else pipe
 
   where parseLine = do
           str <- await
           yield $ parseLine' str
           parseLine
-        parseLine' s = map conv $ splitOn "," $ trim s
+        parseLine' s = map conv $ filter' (splitOn "," $ trim s)
+          where filter' line = _last options (_first options line)
+                _first Options {stripFirst = strip} line
+                    | strip = tail line
+                    | otherwise = line
+
+                _last Options {stripLast = strip} line
+                    | strip = init line
+                    | otherwise = line
+
         conv v = read v :: Double
         trim = f . f
           where f = reverse . dropWhile isSpace
