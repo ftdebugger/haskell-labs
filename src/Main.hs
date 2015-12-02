@@ -2,31 +2,46 @@ import System.Environment
 
 import My.Arguments
 import My.CSV
-import My.FCM
+import My.Bayes
+import Pipes
 import Data.List
+import System.IO
+
+import qualified Pipes.Prelude as P
 
 -- Main
 
-main :: IO () --[()]
+-- main :: IO ()
 main = do
     options <- getArgs >>= parseArguments
 
     let Options {input = file} = options
 
-    csv <- parseFile options file
+    let lineStream = parseFileWithPipes options file
+    let splitedStream = lineStream >-> collect []
+    lastStream <- P.last splitedStream
 
-    processCSV options csv
+    process lastStream
 
-    where processCSV Options {distance = dist, clustersCount = count, randomCenters = random, eps = _eps} csv = do
-            accessories <- process (csvToObjects csv)
+    return ()
+    -- runEffect $ for lastStream (lift . print)
 
-            printAccessories $ transpose accessories
+    where collect xs = do
+            line <- await
+            yield xs
+            collect $ xs ++ [line]
 
-            return ()
+          process m = case m of
+            Just v -> do
+              bayesInput <- bayesProcess v 0.8 50
 
-            where
-              csvToObjects = map (map conv)
-                where conv v = read v :: Double
-              process = fcmProcess dist count _eps random
-              printAccessories = mapM printAccessory
-                where printAccessory = print
+              runEffect $ each (outputResult bayesInput) >-> pipePrint
+
+          outputResult output = map outputLine output
+          outputLine (c, p, mat, sigma) = (show c) ++ " - " ++ (outputSigma (zip mat sigma))
+          outputSigma params = intercalate " " $ map out (zip params [1..])
+            where out ((m, s), index) = (show index) ++ "(" ++ (show m) ++ "; " ++ (show s) ++ ")"
+
+          pipePrint = do
+            h <- lift $ openFile "out.txt" WriteMode
+            P.toHandle h
