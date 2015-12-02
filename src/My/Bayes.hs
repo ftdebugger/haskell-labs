@@ -65,8 +65,6 @@ getProbableObjectClass object classes = argmax $ map probability classes
         mx (_, a) (_, b) = compare a b
         extractClass (c, _) = c
 
--- calculateResultParams :: BayesObj
-
 bayesProcess :: [[Double]] -> Double -> Int -> IO (BayesClassDistributions)
 bayesProcess input rnd count = do
   g <- getStdGen
