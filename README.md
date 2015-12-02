@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/ftdebugger/haskell-labs.png)](https://travis-ci.org/ftdebugger/haskell-labs)
+# Lab 2 [![Build Status](https://travis-ci.org/ftdebugger/haskell-labs.png)](https://travis-ci.org/ftdebugger/haskell-labs)
 
-# Running tests
+## Running tests
 
 First make sure that all dependencies are installed:
 
