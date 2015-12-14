@@ -6,8 +6,8 @@ import Data.List.Split
 import Control.Parallel.Strategies
 
 type BayesAttributes = [Double]
-type BayesClass = Double
-type BayesClasses = [Double]
+type BayesClass = String
+type BayesClasses = [BayesClass]
 type BayesObject = (BayesAttributes, BayesClass)
 type BayesObjects = [BayesObject]
 type BayesInput = (BayesObjects, BayesObjects)
@@ -18,13 +18,8 @@ type BayesClassDistributions = [BayesClassDistribution]
 type BayesProbability = [Double]
 type BayesProbabilities = [BayesProbability]
 
-listToBayesObjects :: [[Double]] -> BayesObjects
-listToBayesObjects = map conv
-  where conv xs = (init xs, last xs)
-
-
-prepareBayesInput :: [[Double]] -> Double -> [Double] -> BayesInput
-prepareBayesInput input rnd rndSeq = (listToBayesObjects trainingSet, listToBayesObjects checkSet)
+prepareBayesInput :: BayesObjects -> Double -> [Double] -> BayesInput
+prepareBayesInput input rnd rndSeq = (trainingSet, checkSet)
 
   where second (_, xs) = xs
         distributed = zip rndSeq input
@@ -65,11 +60,11 @@ getProbableObjectClass object classes = argmax $ map probability classes
         mx (_, a) (_, b) = compare a b
         extractClass (c, _) = c
 
-bayesProcess :: [[Double]] -> Double -> Int -> IO (BayesClassDistributions)
+bayesProcess :: BayesObjects -> Double -> Int -> IO BayesClassDistributions
 bayesProcess input rnd count = do
   g <- getStdGen
 
-  return $ bestResult (runEval $ parMap makeTry (randomChunks g))
+  return $ bestResult (runEval $ threadMap makeTry (randomChunks g))
 
   where
         first (a, _) = a
@@ -93,9 +88,9 @@ bayesProcess input rnd count = do
 
         randomChunks g = take count $ chunksOf (length input) (randoms g :: [Double])
 
-        parMap :: (a -> b) -> [a] -> Eval [b]
-        parMap f [] = return []
-        parMap f (a:as) = do
+        threadMap :: (a -> b) -> [a] -> Eval [b]
+        threadMap _ [] = return []
+        threadMap f (a:as) = do
            b <- rpar (f a)
-           bs <- parMap f as
+           bs <- threadMap f as
            return (b:bs)

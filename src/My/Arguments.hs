@@ -1,10 +1,6 @@
 module My.Arguments(parseArguments, Options(..), startOptions) where
 
--- import System.Exit
-
--- import Data.List
 import System.Console.GetOpt
--- import System.IO
 
 import My.FCM
 

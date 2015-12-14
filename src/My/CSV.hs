@@ -10,6 +10,7 @@ import qualified Pipes.Prelude as P
 import System.IO
 
 import My.Arguments
+import My.Bayes
 
 -- parse CSV and normalize
 
@@ -27,7 +28,7 @@ parseFile options file = do
 
             return dt
 
-parseFileWithPipes :: Options -> FilePath -> Producer [Double] IO ()
+parseFileWithPipes :: Options -> FilePath -> Producer BayesObject IO ()
 parseFileWithPipes options file = do
   h <- lift $ openFile file ReadMode
   let pipe = P.fromHandle h >-> parseLine
@@ -42,7 +43,7 @@ parseFileWithPipes options file = do
           str <- await
           yield $ parseLine' str
           parseLine
-        parseLine' s = map conv $ filter' (splitOn "," $ trim s)
+        parseLine' s = toInput $ filter' (splitOn "," $ trim s)
           where filter' line = _last options (_first options line)
                 _first Options {stripFirst = strip} line
                     | strip = tail line
@@ -52,6 +53,7 @@ parseFileWithPipes options file = do
                     | strip = init line
                     | otherwise = line
 
+        toInput xs = (map conv $ init xs, last xs)
         conv v = read v :: Double
         trim = f . f
           where f = reverse . dropWhile isSpace
