@@ -2,6 +2,8 @@ module My.Bayes where
 
 import System.Random
 import Data.List
+import Data.List.Split
+import Control.Parallel.Strategies
 
 type BayesAttributes = [Double]
 type BayesClass = Double
@@ -21,15 +23,13 @@ listToBayesObjects = map conv
   where conv xs = (init xs, last xs)
 
 
-prepareBayesInput :: [[Double]] -> Double -> [Double] -> IO BayesInput
-prepareBayesInput input rnd rndSeq = do
-  let distributed = zip rndSeq input
-  let trainingSet = map second $ filter (\(a, _) -> a < rnd) distributed
-  let checkSet = map second $ filter (\(a, _) -> a >= rnd) distributed
-
-  return (listToBayesObjects trainingSet, listToBayesObjects checkSet)
+prepareBayesInput :: [[Double]] -> Double -> [Double] -> BayesInput
+prepareBayesInput input rnd rndSeq = (listToBayesObjects trainingSet, listToBayesObjects checkSet)
 
   where second (_, xs) = xs
+        distributed = zip rndSeq input
+        trainingSet = map second $ filter (\(a, _) -> a < rnd) distributed
+        checkSet = map second $ filter (\(a, _) -> a >= rnd) distributed
 
 getBayesClasses :: BayesObjects -> BayesClasses
 getBayesClasses objects = nub $ map getClass objects
@@ -68,31 +68,34 @@ getProbableObjectClass object classes = argmax $ map probability classes
 bayesProcess :: [[Double]] -> Double -> Int -> IO (BayesClassDistributions)
 bayesProcess input rnd count = do
   g <- getStdGen
-  (_, distribution) <- step (randoms g :: [Double]) count (1, [])
 
-  return distribution
+  return $ bestResult (runEval $ parMap makeTry (randomChunks g))
 
-  where step rndSeq cnt best
-          | cnt == 0 = return best
-          | otherwise = do
-              current <- process rndSeq
-              step (drop (length input) rndSeq) (cnt - 1) (mx best current)
+  where
+        first (a, _) = a
+        second (_, b) = b
+        makeTry :: [Double] -> (Double, BayesClassDistributions)
+        makeTry rndSeq = (errorRate, distribution)
+          where
+            makeSets = prepareBayesInput input rnd rndSeq
+            trainingSet = first makeSets
+            checkSet = second makeSets
+            distribution = aprioryBayesDistribution trainingSet $ getBayesClasses trainingSet
 
-        mx (aError, aDist) (bError, bDist)
-          | aError < bError = (aError, aDist)
-          | otherwise = (bError, bDist)
+            checkResult = map check checkSet
+                                where check object = comp object (getProbableObjectClass object distribution)
+                                      comp (_, c1) c2 = c1 == c2
+            failed = length (filter not checkResult)
+            errorRate = fromIntegral failed / fromIntegral (length checkResult)
 
-        process rndSeq = do
-                (trainingSet, checkSet) <- prepareBayesInput input rnd rndSeq
+        bestResult results = second $ minimumBy comp results
+          where comp (a, _) (b, _) = compare a b
 
-                let distribution = aprioryBayesDistribution trainingSet $ getBayesClasses trainingSet
+        randomChunks g = take count $ chunksOf (length input) (randoms g :: [Double])
 
-                let checkResult = map check checkSet
-                                    where check object = comp object (getProbableObjectClass object distribution)
-                                          comp (_, c1) c2 = c1 == c2
-
-                let failed = length (filter not checkResult)
-                let errorRate = fromIntegral failed / fromIntegral (length checkResult)
-                let result = (errorRate, distribution)
-
-                return result
+        parMap :: (a -> b) -> [a] -> Eval [b]
+        parMap f [] = return []
+        parMap f (a:as) = do
+           b <- rpar (f a)
+           bs <- parMap f as
+           return (b:bs)

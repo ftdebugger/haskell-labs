@@ -1,4 +1,4 @@
-# Lab 2 [![Build Status](https://travis-ci.org/ftdebugger/haskell-labs.png)](https://travis-ci.org/ftdebugger/haskell-labs)
+# Lab 3 [![Build Status](https://travis-ci.org/ftdebugger/haskell-labs.png)](https://travis-ci.org/ftdebugger/haskell-labs)
 
 ## Running tests
 
@@ -24,19 +24,19 @@ $ cabal test
 Iris
 
 ```
-$ ./dist/build/lab/lab ./dist/build/lab/lab -i tasks/irises.txt
+$ ./dist/build/lab/lab +RTS -ls -s -N8 -RTS -t 1000 -i tasks/irises.txt
 ```
 
 Butterfly
 
 ```
-$ ./dist/build/lab/lab -i tasks/butterfly.txt
+$ ./dist/build/lab/lab +RTS -ls -s -N8 -RTS -t 1000 -i tasks/butterfly.txt
 ```
 
 Glass
 
 ```
-$ ./dist/build/lab/lab -i tasks/glass.txt
+$ ./dist/build/lab/lab +RTS -ls -s -N8 -RTS -t 1000 -i tasks/glass.txt
 ```
 
 ## Options

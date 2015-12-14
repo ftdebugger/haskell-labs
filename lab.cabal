@@ -12,6 +12,9 @@ executable lab
   main-is:        Main.hs
   ghc-options:
       -Wall
+      -threaded
+      -eventlog
+      -rtsopts
   hs-source-dirs:
       src
   -- exposed-modules:
@@ -25,6 +28,7 @@ executable lab
     , split
     , pipes
     , text
+    , parallel
 
 library
   ghc-options:
@@ -45,6 +49,7 @@ library
     , split
     , pipes
     , text
+    , parallel
 
 test-suite spec
   type:
@@ -64,3 +69,4 @@ test-suite spec
     , split
     , pipes
     , text
+    , parallel
